@@ -14,18 +14,14 @@ global compare_update_times_dict
 
 ######## USER SUPPLIED VALUES ######## 
 
-# Enable modchecker
-modchecker_enable = sys.argv[1]
-
 # File Locations
-ini_file = sys.argv[2]
+ini_file = sys.argv[1]
 
 # RCON details
 #Since this is Valve server RCON this might need to be your public IP even if the server is local
-server_address = sys.argv[3]
+server_address = sys.argv[2]
 rcon_port = 27015
-rcon_password = sys.argv[4]
-
+rcon_password = sys.argv[3]
 ###################################### 
 
 rcon_details = (server_address, int(rcon_port))
@@ -39,14 +35,6 @@ id_list = []
 #compare_update_times_dict = []
 
 #Testing zone
-
-def isEnabledAndHasRconPassword():
-    if modchecker_enable == True and rcon_password != "":
-        print("Modchecker enabled.")
-    else:
-        print("Modchecker disabled or RCONPassword is missing. Configure in .env file")
-        quit()
-
 
 def close_server(rcon_details, rcon_password):
     try: 
@@ -132,27 +120,26 @@ def generate_batches():
 
 
 def main(ini_file,ws_line):
-    isEnabledAndHasRconPassword()
-    file_path = path.relpath(ini_file)
-    with open(file_path) as file_read:
-        lines = file_read.readlines()
-        new_list = []
-        idx = 0
-        for line in lines:
-            if ws_line in line:
-                new_list.insert(idx, line)
-                idx += 1
-        if len(new_list)==0:
-            print("\n\"" +ws_line+ "\" is not found in \"" +file_path+ "\"!")
-        else:
-            # 2 lines contain "WorkshopItems=", we want the second one.
-            id_string = end=new_list[1][14:].rstrip()
-    #Made this global so there is no need to rerun this portion for subsequent tests.
-    #Still rerunning batching because I don't want to bother making variable amounts of global vars and it really isn't a huge load to batch.
-    #Subsequent runs will just recall generate_batches()
-    global id_list
-    id_list = id_string.split(";")
-    generate_batches()
+        file_path = path.relpath(ini_file)
+        with open(file_path) as file_read:
+            lines = file_read.readlines()
+            new_list = []
+            idx = 0
+            for line in lines:
+                if ws_line in line:
+                    new_list.insert(idx, line)
+                    idx += 1
+            if len(new_list)==0:
+                print("\n\"" +ws_line+ "\" is not found in \"" +file_path+ "\"!")
+            else:
+                # 2 lines contain "WorkshopItems=", we want the second one.
+                id_string = end=new_list[1][14:].rstrip()
+        #Made this global so there is no need to rerun this portion for subsequent tests.
+        #Still rerunning batching because I don't want to bother making variable amounts of global vars and it really isn't a huge load to batch.
+        #Subsequent runs will just recall generate_batches()
+        global id_list
+        id_list = id_string.split(";")
+        generate_batches()
 
 
 

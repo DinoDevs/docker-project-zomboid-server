@@ -13,7 +13,10 @@ ENV STEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
       dos2unix \
-    && apt-get install python3 -y && apt-get install python3.pip -y && pip install requests && pip install python-valve \
+    && apt-get install python3 -y \
+    && apt-get install python3.pip -y \
+    && pip install requests \
+    && pip install python-valve \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
