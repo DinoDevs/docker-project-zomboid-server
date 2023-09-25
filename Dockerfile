@@ -13,6 +13,7 @@ ENV STEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated"
 RUN apt-get update \
     && apt-get install -y --no-install-recommends --no-install-suggests \
       dos2unix \
+    && apt-get install python3 -y && apt-get install python3.pip -y && pip install requests && pip install python-valve \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -33,6 +34,10 @@ RUN chmod 550 /server/scripts/entry.sh
 # Copy searchfolder file
 COPY --chown=${USER}:${USER} scripts/search_folder.sh /server/scripts/search_folder.sh
 RUN chmod 550 /server/scripts/search_folder.sh
+
+# Copy modchecker file
+COPY --chown=${USER}:${USER} scripts/modchecker.py /server/scripts/modchecker.py
+RUN chmod 550 /server/scripts/modchecker.py
 
 # Create required folders to keep their permissions on mount
 RUN mkdir -p "${HOMEDIR}/Zomboid"

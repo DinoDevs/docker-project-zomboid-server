@@ -14,6 +14,8 @@ This dockerfile converts some env variables to arguments in the server command, 
 
 `ADMINPASSWORD:` Sets or changes the admin password. Is mandatory at first startup or will fail. I recommend to remove it once the server is started because the server logs every argument in clear text (if doesn't cares, you can leave it).
 
+`RCONPASSWORD:` Sets or changes the RCON Password. Optional but very useful as you cannot use the PZ console from the container.
+
 `PASSWORD:` Sets or changes server password. Is optional.
 
 `CACHEDIR:` Set the folder where the data will be stored. By default the server stores the data in the Zomboid folder in home directory (/home/steam/Zomboid). Is recommended to store this data into a persistent volume to keep the server state.
@@ -47,6 +49,8 @@ This dockerfile converts some env variables to arguments in the server command, 
 `WORKSHOP_IDS:` Semicolon separated list of Workshop IDs to install to the server
 
 `MOD_IDS:` Semicolon separated list of Mod IDs to install to the server
+
+`MODCHECKERENABLED:` Enables modchecker script that checks whether a mod on the server is updated and restarts the server accordingly. (IMPORTANT: RCON has to be configured and enabled for this to work)
 
 Mods will install on second server start
 
