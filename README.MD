@@ -50,7 +50,7 @@ This dockerfile converts some env variables to arguments in the server command, 
 
 `MOD_IDS:` Semicolon separated list of Mod IDs to install to the server
 
-`MODCHECKERENABLED:` Enables modchecker script that checks whether a mod on the server is updated and restarts the server accordingly. (IMPORTANT: RCON has to be configured and enabled for this to work)
+`MODCHECKERENABLED:` Enables modchecker script that checks whether a mod on the server is updated and restarts the server accordingly. Highly recommended since mods might update when you cannot restart the server leaving your players unable to join. (IMPORTANT: RCON has to be configured and enabled for this to work)
 
 Mods will install on second server start
 
