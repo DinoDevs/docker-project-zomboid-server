@@ -120,5 +120,6 @@ In the scripts folders there are three scripts:
 
 * entry.sh: The script used in the image to start the server
 * search_folder.sh: Script to search through mod folders for any maps 
+* modchecker.py: Script to check if any workshop mods have been updated every 5 minutes and restarts the server if it finds an out of date one. Script source: https://github.com/zkkng/Zomboid_Mod_Checker
 * update_forum.sh: Check the posts in the forum for updates and create a new image if a new version exists. This script was made because looks like the official page doesn't update the version as soon it is out.
-* uodate_web.sh: Check the version in the official page and create a new image if a new version exists
+* update_web.sh: Check the version in the official page and create a new image if a new version exists
