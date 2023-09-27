@@ -103,7 +103,7 @@ def check_again(server_address, rcon_port, rcon_password):
     compare_update_times_dict = {}
     generate_batches()
     if startup_update_times_dict == compare_update_times_dict:
-        close_server(server_address, rcon_port, rcon_password)
+        print("No mod updates found.")
     else:
         print("Mod update detected. Restarting server now.")
         close_server(server_address, rcon_port, rcon_password)
