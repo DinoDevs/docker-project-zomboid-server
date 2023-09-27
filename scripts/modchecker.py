@@ -5,23 +5,29 @@ import time
 import datetime
 import valve.rcon
 import sys
+import os
+import subprocess
 from os import path
 
 global run_count
 global startup_update_times_dict
 global compare_update_times_dict
 
+global hasStarted
+
 
 ######## USER SUPPLIED VALUES ######## 
 
 # File Locations
 ini_file = sys.argv[1]
+start_file = '/home/steam/pz-dedicated/start-server.sh'
 
 # RCON details
 #Since this is Valve server RCON this might need to be your public IP even if the server is local
 server_address = sys.argv[2]
 rcon_port = 27015
 rcon_password = sys.argv[3]
+server_args = sys.argv[4]
 ###################################### 
 
 rcon_details = (server_address, int(rcon_port))
@@ -36,6 +42,24 @@ id_list = []
 
 #Testing zone
 
+
+def restart_server():
+    hasStarted = False
+    subprocess.Popen(f"sh {os.path.relpath(start_file)} {server_args}", shell=True, start_new_session=True)
+    while hasStarted == False:
+        try: 
+            with valve.rcon.RCON(rcon_details, rcon_password, timeout=10) as rcon:
+                hasStarted = True
+        except (ConnectionRefusedError, TimeoutError):
+            print("Server is still starting")
+            time.sleep(10)
+            pass
+
+    self_path = str(os.path.abspath(__file__))
+    subprocess.run(f"python3 {self_path} {ini_file} {server_address} {rcon_password} '{server_args}'", shell=True, start_new_session=True)
+    time.sleep(1)
+    exit(0)
+
 def close_server(rcon_details, rcon_password):
     try: 
         with valve.rcon.RCON(rcon_details, rcon_password, timeout=10) as rcon:
@@ -46,9 +70,9 @@ def close_server(rcon_details, rcon_password):
         print("Connection to RCON refused or timed out. You may have configured port forwarding, firewall, or server details incorrectly!")
         print("Error: "+str(e))
         print("If you continue from here the script will just try to relaunch the server. If its not working right just exit this script entirely and fix your configuration.")
-        input("Press Enter to continue...")
-        
 
+    restart_server()
+    
     
 
 def check_again(rcon_details, rcon_password):
@@ -59,12 +83,13 @@ def check_again(rcon_details, rcon_password):
     generate_batches()
     if startup_update_times_dict == compare_update_times_dict:
         print("No mod updates detected.")
+        close_server(rcon_details, rcon_password)
     else:
         print("Mod update detected. Restarting server now.")
         close_server(rcon_details, rcon_password)
     print("Time until next check: ")
     # Rechecks every 5 minutes.
-    t = 300
+    t = 30
     while t:
         mins, secs = divmod(t, 60)
         timer = '{:02d}:{:02d}'.format(mins, secs)
@@ -144,6 +169,6 @@ def main(ini_file,ws_line):
 
 
 main(ini_file,ws_line)
-time.sleep(10)
+time.sleep(30)
 while True:
     check_again(rcon_details, rcon_password)

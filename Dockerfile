@@ -50,4 +50,5 @@ WORKDIR ${HOMEDIR}
 EXPOSE 16261-16262/udp \
        27015/tcp
 
+CMD ["sleep", "infinity"]
 ENTRYPOINT ["/server/scripts/entry.sh"]

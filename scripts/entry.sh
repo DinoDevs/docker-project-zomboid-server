@@ -187,8 +187,9 @@ chown -R 1000:1000 /home/steam/pz-dedicated/steamapps/workshop /home/steam/Zombo
 
 su - steam -c "export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPPDIR} && pwd && if [ ${MODCHECKERENABLED} = True ]; then 
   echo 'Modchecker enabled'
-  ./start-server.sh ${ARGS} & python3 /server/scripts/modchecker.py ${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini 127.0.0.1 ${RCONPASSWORD}; 
+  ./start-server.sh ${ARGS} & python3 /server/scripts/modchecker.py ${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini 127.0.0.1 ${RCONPASSWORD} '${ARGS}'
 else
   echo 'Modchecker not enabled'
-  ./start-server.sh ${ARGS}
+  ./start-server.sh ${ARGS} &
 fi"
+
