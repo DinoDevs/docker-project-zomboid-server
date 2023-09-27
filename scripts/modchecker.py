@@ -3,10 +3,10 @@ import requests
 import json
 import time
 import datetime
-import valve.rcon
 import sys
 import os
 import subprocess
+from zomboid_rcon import ZomboidRCON
 from os import path
 
 global run_count
@@ -23,7 +23,6 @@ ini_file = sys.argv[1]
 start_file = '/home/steam/pz-dedicated/start-server.sh'
 
 # RCON details
-#Since this is Valve server RCON this might need to be your public IP even if the server is local
 server_address = sys.argv[2]
 rcon_port = 27015
 rcon_password = sys.argv[3]
@@ -48,8 +47,9 @@ def restart_server():
     subprocess.Popen(f"sh {os.path.relpath(start_file)} {server_args}", shell=True, start_new_session=True)
     while hasStarted == False:
         try: 
-            with valve.rcon.RCON(rcon_details, rcon_password, timeout=10) as rcon:
-                hasStarted = True
+            pz = ZomboidRCON(ip=server_address, port=rcon_port, password=rcon_password)
+            pz.serverMsg("Server started")
+            hasStarted = True
         except (ConnectionRefusedError, TimeoutError):
             print("Server is still starting")
             time.sleep(10)
@@ -60,22 +60,19 @@ def restart_server():
     time.sleep(1)
     exit(0)
 
-def close_server(rcon_details, rcon_password):
-    try: 
-        with valve.rcon.RCON(rcon_details, rcon_password, timeout=10) as rcon:
-                    rcon.execute("quit",block=True, timeout=10)
-    except valve.rcon.RCONCommunicationError:
-        print("Server shutdown!")
-    except (ConnectionRefusedError, TimeoutError) as e:
-        print("Connection to RCON refused or timed out. You may have configured port forwarding, firewall, or server details incorrectly!")
-        print("Error: "+str(e))
-        print("If you continue from here the script will just try to relaunch the server. If its not working right just exit this script entirely and fix your configuration.")
+def close_server(server_address, rcon_port, rcon_password):
+    pz = ZomboidRCON(ip=server_address, port=rcon_port, password=rcon_password)
+    # Add timer and to immediately shut down if there are no players
+    command = pz.serverMsg("Mod update found. Shutting down server in 5 minutes")
+    print(command.response)
 
+    pz.quit()
+    time.sleep(15) # Change to checking if the server is running instead of a fixed time)
     restart_server()
     
     
 
-def check_again(rcon_details, rcon_password):
+def check_again(server_address, rcon_port, rcon_password):
     print("Rechecking mods for updates - "+str(datetime.datetime.now().replace(microsecond=0)))
     #For any additional executions of generate_batches() you need to ensure compare_update_times_dict is set back to {} first
     global compare_update_times_dict
@@ -83,12 +80,13 @@ def check_again(rcon_details, rcon_password):
     generate_batches()
     if startup_update_times_dict == compare_update_times_dict:
         print("No mod updates detected.")
+        close_server(server_address, rcon_port, rcon_password)
     else:
         print("Mod update detected. Restarting server now.")
-        close_server(rcon_details, rcon_password)
+        close_server(server_address, rcon_port, rcon_password)
     print("Time until next check: ")
     # Rechecks every 5 minutes.
-    t = 300
+    t = 30
     while t:
         mins, secs = divmod(t, 60)
         timer = '{:02d}:{:02d}'.format(mins, secs)
@@ -170,4 +168,4 @@ def main(ini_file,ws_line):
 main(ini_file,ws_line)
 time.sleep(30)
 while True:
-    check_again(rcon_details, rcon_password)
+    check_again(server_address, rcon_port, rcon_password)

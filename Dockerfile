@@ -15,8 +15,8 @@ RUN apt-get update \
       dos2unix \
     && apt-get install python3 -y \
     && apt-get install python3.pip -y \
+    && pip install zomboid-rcon \
     && pip install requests \
-    && pip install python-valve \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
