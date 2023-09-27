@@ -17,6 +17,7 @@ RUN apt-get update \
     && apt-get install python3.pip -y \
     && pip install zomboid-rcon \
     && pip install requests \
+    && pip install psutil \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 

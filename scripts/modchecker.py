@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import psutil
 import requests
 import json
 import time
@@ -60,14 +61,37 @@ def restart_server():
     time.sleep(1)
     exit(0)
 
-def close_server(server_address, rcon_port, rcon_password):
-    pz = ZomboidRCON(ip=server_address, port=rcon_port, password=rcon_password)
-    # Add timer and to immediately shut down if there are no players
-    command = pz.serverMsg("Mod update found. Shutting down server in 5 minutes")
-    print(command.response)
+def close_server(server_address, rcon_port, rcon_password):    
 
+    pz = ZomboidRCON(ip=server_address, port=rcon_port, password=rcon_password)  
+    pz.serverMsg("Mod update detected. Server will restart in 5 min or earlier if everyone leaves.")
+    
+    t = 30
+    while t: 
+
+        playerlist = pz.players().response     
+
+        if "Players connected (0):" in playerlist:
+            t = 0
+        else:
+            time.sleep(10)
+            t -= 1
+
+    pids = psutil.pids()
+    pzPid = 0
+
+    for pid in pids:
+            process = psutil.Process(pid)
+            if process.name().find("ProjectZomboid") != -1:
+                pzPid = pid
+
+    pzProcess = psutil.Process(pzPid)        
+    
     pz.quit()
-    time.sleep(15) # Change to checking if the server is running instead of a fixed time)
+
+    while pzProcess.is_running():
+        time.sleep(1)
+
     restart_server()
     
     
