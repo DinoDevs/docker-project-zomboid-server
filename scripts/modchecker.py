@@ -83,13 +83,12 @@ def check_again(rcon_details, rcon_password):
     generate_batches()
     if startup_update_times_dict == compare_update_times_dict:
         print("No mod updates detected.")
-        close_server(rcon_details, rcon_password)
     else:
         print("Mod update detected. Restarting server now.")
         close_server(rcon_details, rcon_password)
     print("Time until next check: ")
     # Rechecks every 5 minutes.
-    t = 30
+    t = 300
     while t:
         mins, secs = divmod(t, 60)
         timer = '{:02d}:{:02d}'.format(mins, secs)
