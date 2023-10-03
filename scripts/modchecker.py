@@ -64,18 +64,25 @@ def restart_server():
 def close_server(server_address, rcon_port, rcon_password):    
 
     pz = ZomboidRCON(ip=server_address, port=rcon_port, password=rcon_password)  
-    pz.serverMsg("Mod update detected. Server will restart in 5 min or earlier if everyone leaves.")
-    
-    t = 30
-    while t: 
+    pz.serverMsg("Mod update detected.")
+    pz.save()
 
-        playerlist = pz.players().response     
+    t = 10
+    while t: 
+        try:
+            playerlist = pz.players().response     
+        except:
+            print("Error when reading playerlist.")
 
         if "Players connected (0):" in playerlist:
             t = 0
         else:
-            time.sleep(10)
+            pz.serverMsg("Server will restart in less than 5 min or earlier if you leave.")
+            time.sleep(30)
             t -= 1
+
+    pz.serverMsg("Server restarting in 10 seconds.")
+    time.sleep(10)
 
     pids = psutil.pids()
     pzPid = 0
@@ -109,7 +116,7 @@ def check_again(server_address, rcon_port, rcon_password):
         close_server(server_address, rcon_port, rcon_password)
     print("Time until next check: 5 min")
     # Rechecks every 5 minutes.
-    t = 300
+    t = 60
     while t:
         time.sleep(1)
         t -= 1
@@ -137,7 +144,10 @@ def update_dict_maker(data):
 
 def post_request(post_dict):
     r = requests.post("https://api.steampowered.com/ISteamRemoteStorage/GetPublishedFileDetails/v1/", data=post_dict)
-    pp = json.loads(r.text)
+    try:
+        pp = json.loads(r.text)
+    except: 
+        print("No JSON data to be read. Trying again later")
     #print(json.dumps(pp['response']['publishedfiledetails'], indent=2))
     data = pp['response']['publishedfiledetails']
     update_dict_maker(data)
