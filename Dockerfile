@@ -7,8 +7,8 @@ ENV STEAMAPP pz
 ENV STEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated"
 # ENV STEAMAPPVALIDATE 0
 
-COPY scripts/entry.sh "${HOMEDIR}/entry.sh"
-COPY scripts/search_folder.sh "${HOMEDIR}/search_folder.sh"
+COPY scripts/entry.sh /server/scripts/entry.sh
+COPY scripts/search_folder.sh /server/scripts/search_folder.sh
 
 RUN set -x \
 	# Install, update & upgrade packages
@@ -55,7 +55,7 @@ RUN set -x \
 
 WORKDIR ${HOMEDIR}
 
-CMD ["bash", "entry.sh"]
+CMD ["bash", "/server/scripts/entry.sh"]
 
 # Expose ports
 EXPOSE 16261-16262/udp \
