@@ -1,45 +1,62 @@
-###########################################################
-# Dockerfile that builds a CSGO Gameserver
-###########################################################
-FROM cm2network/steamcmd:root
+# BUILD STAGE
 
-LABEL maintainer="daniel.carrasco@electrosoftcloud.com"
+FROM cm2network/steamcmd:root as build_stage
 
 ENV STEAMAPPID 380870
 ENV STEAMAPP pz
 ENV STEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated"
+# ENV STEAMAPPVALIDATE 0
 
-# Install required packages
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
-      dos2unix \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+COPY scripts/entry.sh /server/scripts/entry.sh
+COPY scripts/search_folder.sh /server/scripts/search_folder.sh
 
-# Download the Project Zomboid dedicated server app using the steamcmd app
-# Set the entry point file permissions
 RUN set -x \
-  && mkdir -p "${STEAMAPPDIR}" \
-  && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
-  && bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
-                                    +login anonymous \
-                                    +app_update "${STEAMAPPID}" validate \
-                                    +quit
+	# Install, update & upgrade packages
+	&& apt-get update \
+	&& apt-get install -y --no-install-recommends --no-install-suggests \
+		            wget \
+		            ca-certificates \
+		            lib32z1 \
+                simpleproxy \
+                libicu-dev \
+                unzip \
+		            jq \
+                dos2unix \
+	&& mkdir -p "${STEAMAPPDIR}" \
+	# Add entry script
+	&& chmod +x "/server/scripts/entry.sh" \
+	&& chmod +x "/server/scripts/search_folder.sh" \
+	&& chown -R "${USER}:${USER}" "/server/scripts/entry.sh" "${STEAMAPPDIR}" \
+	&& chown -R "${USER}:${USER}" "/server/scripts/search_folder.sh" "${STEAMAPPDIR}" \
+	# Clean up
+        && apt-get clean \
+        && find /var/lib/apt/lists/ -type f -delete
 
-# Copy the entry point file
-COPY --chown=${USER}:${USER} scripts/entry.sh /server/scripts/entry.sh
-RUN chmod 550 /server/scripts/entry.sh
+# BASE
 
-# Copy searchfolder file
-COPY --chown=${USER}:${USER} scripts/search_folder.sh /server/scripts/search_folder.sh
-RUN chmod 550 /server/scripts/search_folder.sh
+FROM build_stage AS bullseye-base
 
-# Create required folders to keep their permissions on mount
+# Set permissions on STEAMAPPDIR
+#   Permissions may need to be reset if persistent volume mounted
+RUN set -x \
+        && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
+        && chmod 0777 "${STEAMAPPDIR}"
+
+# Switch to user
+USER ${USER}
+
 RUN mkdir -p "${HOMEDIR}/Zomboid"
 
+RUN set -x \
+        && bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
+        +login anonymous \
+        +app_update "${STEAMAPPID}" validate \
+        +quit
+
 WORKDIR ${HOMEDIR}
+
+CMD ["bash", "/server/scripts/entry.sh"]
+
 # Expose ports
 EXPOSE 16261-16262/udp \
        27015/tcp
-
-ENTRYPOINT ["/server/scripts/entry.sh"]
