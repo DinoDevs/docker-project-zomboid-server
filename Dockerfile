@@ -24,10 +24,10 @@ RUN set -x \
                 dos2unix \
 	&& mkdir -p "${STEAMAPPDIR}" \
 	# Add entry script
-	&& chmod +x "${HOMEDIR}/entry.sh" \
-	&& chmod +x "${HOMEDIR}/search_folder.sh" \
-	&& chown -R "${USER}:${USER}" "${HOMEDIR}/entry.sh" "${STEAMAPPDIR}" \
-	&& chown -R "${USER}:${USER}" "${HOMEDIR}/search_folder.sh" "${STEAMAPPDIR}" \
+	&& chmod +x "/server/scripts/entry.sh" \
+	&& chmod +x "/server/scripts/search_folder.sh" \
+	&& chown -R "${USER}:${USER}" "/server/scripts/entry.sh" "${STEAMAPPDIR}" \
+	&& chown -R "${USER}:${USER}" "/server/scripts/search_folder.sh" "${STEAMAPPDIR}" \
 	# Clean up
         && apt-get clean \
         && find /var/lib/apt/lists/ -type f -delete
