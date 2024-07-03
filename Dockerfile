@@ -40,16 +40,18 @@ FROM build_stage AS bullseye-base
 #   Permissions may need to be reset if persistent volume mounted
 RUN set -x \
         && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
-        && chmod 0777 "${STEAMAPPDIR}" \
-        && bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
-        +login anonymous \
-        +app_update "${STEAMAPPID}" validate \
-        +quit
+        && chmod 0777 "${STEAMAPPDIR}"
 
 # Switch to user
 USER ${USER}
 
 RUN mkdir -p "${HOMEDIR}/Zomboid"
+
+RUN set -x \
+        && bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
+        +login anonymous \
+        +app_update "${STEAMAPPID}" validate \
+        +quit
 
 WORKDIR ${HOMEDIR}
 
