@@ -127,6 +127,13 @@ if [ -n "${STEAMPORT2}" ]; then
   ARGS="${ARGS} -steamport2 ${STEAMPORT1}"
 fi
 
+if [ -n "${RCONPASSWORD}" ]; then
+	sed -i "s/RCONPassword=.*/RCONPassword=${RCONPASSWORD}/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini"
+elif [ -z "${RCONPASSWORD}" ] && [ "${MODCHECKERENABLED}" == "True" ]; then
+  echo "Missing RCON Password. Configure RCON Password for modchecker to work."
+  exit 0
+fi
+
 if [ -n "${PASSWORD}" ]; then
 	sed -i "s/Password=.*/Password=${PASSWORD}/" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini"
 fi
@@ -178,8 +185,20 @@ export LD_LIBRARY_PATH="${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}"
 ## Fix the permissions in the data and workshop folders
 chown -R "${USER}:${USER}" "${HOMEDIR}/pz-dedicated/steamapps/workshop" "${HOMEDIR}/Zomboid"
 
+## Start mod checker
+if [ ${MODCHECKERENABLED} = True ]; then 
+  echo '*** INFO: Modchecker enabled'
+  & python3 "${SERVERSCRIPTSDIR}/modchecker.py" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini" "127.0.0.1" "${RCONPASSWORD}" "${ARGS}"
+else
+  echo '*** INFO: Modchecker disabled'
+fi
+
 # Execute server
 export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && \
-cd ${STEAMAPPDIR} && \
-pwd && \
-./start-server.sh ${ARGS}
+  cd ${STEAMAPPDIR} && \
+  pwd && \
+  ./start-server.sh ${ARGS}
+ 
+ # Keep running
+ tail -f /dev/null
+ 

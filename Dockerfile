@@ -18,6 +18,13 @@ RUN apt-get update && \
 	chmod -R 775 "${STEAMAPPDIR}" "${SERVERDIR}" && \
 	chown -R "${USER}:${USER}" "${STEAMAPPDIR}" "${SERVERDIR}"
 
+# Install python dependencies for modcheck
+RUN apt-get update && \
+	apt-get install -y python3 python3.pip && \
+	apt-get clean && \
+	find /var/lib/apt/lists/ -type f -delete && \
+	python3 -m pip install --no-cache-dir requests psutil zomboid-rcon
+
 # Switch to user
 USER ${USER}
 
@@ -32,10 +39,12 @@ FROM steamcmd-pz-server-base AS steamcmd-pz-server
 # Copy scripts
 COPY --chown=${USER}:${USER} scripts/entry.sh "${SERVERSCRIPTSDIR}/entry.sh"
 COPY --chown=${USER}:${USER} scripts/search_folder.sh "${SERVERSCRIPTSDIR}/search_folder.sh"
+COPY --chown=${USER}:${USER} scripts/search_folder.sh "${SERVERSCRIPTSDIR}/modchecker.sh"
 
-# Add entry script
-RUN chmod +x "${SERVERSCRIPTSDIR}/entry.sh" && \
-	chmod +x "${SERVERSCRIPTSDIR}/search_folder.sh"
+# Prepare scripts permissions
+RUN chmod 550 "${SERVERSCRIPTSDIR}/entry.sh" && \
+	chmod 550 "${SERVERSCRIPTSDIR}/search_folder.sh" && \
+	chmod 550 "${SERVERSCRIPTSDIR}/modchecker.py"
 
 WORKDIR ${HOMEDIR}
 

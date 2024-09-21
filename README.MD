@@ -14,6 +14,8 @@ This dockerfile converts some env variables to arguments in the server command, 
 
 `ADMINPASSWORD:` Sets or changes the admin password. Is mandatory at first startup or will fail. I recommend to remove it once the server is started because the server logs every argument in clear text (if doesn't cares, you can leave it).
 
+`RCONPASSWORD:` Sets or changes the RCON Password. Optional but very useful as you cannot use the PZ console from the container.
+
 `PASSWORD:` Sets or changes server password. Is optional.
 
 `CACHEDIR:` Set the folder where the data will be stored. By default the server stores the data in the Zomboid folder in home directory (/home/steam/Zomboid). Is recommended to store this data into a persistent volume to keep the server state.
@@ -47,6 +49,8 @@ This dockerfile converts some env variables to arguments in the server command, 
 `WORKSHOP_IDS:` Semicolon separated list of Workshop IDs to install to the server
 
 `MOD_IDS:` Semicolon separated list of Mod IDs to install to the server
+
+`MODCHECKERENABLED:` Enables modchecker script that checks whether a mod on the server is updated and restarts the server accordingly. Highly recommended since mods might update when you cannot restart the server leaving your players unable to join. (IMPORTANT: RCON has to be configured and enabled for this to work)
 
 Mods will install on second server start
 
@@ -116,5 +120,6 @@ In the scripts folders there are three scripts:
 
 * entry.sh: The script used in the image to start the server
 * search_folder.sh: Script to search through mod folders for any maps 
+* modchecker.py: Script to check if any workshop mods have been updated every 5 minutes and restarts the server if it finds an out of date one. Script source: https://github.com/zkkng/Zomboid_Mod_Checker
 * update_forum.sh: Check the posts in the forum for updates and create a new image if a new version exists. This script was made because looks like the official page doesn't update the version as soon it is out.
-* uodate_web.sh: Check the version in the official page and create a new image if a new version exists
+* update_web.sh: Check the version in the official page and create a new image if a new version exists
