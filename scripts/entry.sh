@@ -150,12 +150,12 @@ if [ -n "${WORKSHOP_IDS}" ]; then
 fi
 
 # Fixes EOL in script file for good measure
-sed -i 's/\r$//' /server/scripts/search_folder.sh
+sed -i 's/\r$//' "${SERVERSCRIPTSDIR}/search_folder.sh"
 # Check 'search_folder.sh' script for details
 if [ -e "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600" ]; then
 
   map_list=""
-  source /server/scripts/search_folder.sh "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600"
+  source "${SERVERSCRIPTSDIR}/search_folder.sh" "${HOMEDIR}/pz-dedicated/steamapps/workshop/content/108600"
   map_list=$(<"${HOMEDIR}/maps.txt")  
   rm "${HOMEDIR}/maps.txt"
 
@@ -183,13 +183,22 @@ fi
 export LD_LIBRARY_PATH="${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}"
 
 ## Fix the permissions in the data and workshop folders
-chown -R 1000:1000 /home/steam/pz-dedicated/steamapps/workshop /home/steam/Zomboid
+chown -R "${USER}:${USER}" "${HOMEDIR}/pz-dedicated/steamapps/workshop" "${HOMEDIR}/Zomboid"
 
-su - steam -c "export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd ${STEAMAPPDIR} && pwd && if [ ${MODCHECKERENABLED} = True ]; then 
-  echo 'Modchecker enabled'
-  ./start-server.sh ${ARGS} & python3 /server/scripts/modchecker.py ${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini 127.0.0.1 ${RCONPASSWORD} '${ARGS}'
+## Start mod checker
+if [ ${MODCHECKERENABLED} = True ]; then 
+  echo '*** INFO: Modchecker enabled'
+  & python3 "${SERVERSCRIPTSDIR}/modchecker.py" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini" "127.0.0.1" "${RCONPASSWORD}" "${ARGS}"
 else
-  echo 'Modchecker not enabled'
-  ./start-server.sh ${ARGS} &
-fi"
+  echo '*** INFO: Modchecker disabled'
+fi
 
+# Execute server
+export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && \
+  cd ${STEAMAPPDIR} && \
+  pwd && \
+  ./start-server.sh ${ARGS}
+ 
+ # Keep running
+ tail -f /dev/null
+ 

@@ -1,7 +1,7 @@
 version: "3.7"
 services:
   ProjectZomboidDedicatedServer:
-    image: danixu86/project-zomboid-dedicated-server:latest
+    image: dinodevs/docker-project-zomboid-server:latest
     restart: unless-stopped
     # Always have this 1-2 GB more than your PZ memory config
     mem_limit: "8g"

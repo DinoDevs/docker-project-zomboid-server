@@ -1,55 +1,54 @@
-###########################################################
-# Dockerfile that builds a CSGO Gameserver
-###########################################################
-FROM cm2network/steamcmd:root
-
-LABEL maintainer="daniel.carrasco@electrosoftcloud.com"
+# Build Server Base
+FROM cm2network/steamcmd:root AS steamcmd-pz-server-base
 
 ENV STEAMAPPID 380870
 ENV STEAMAPP pz
 ENV STEAMAPPDIR "${HOMEDIR}/${STEAMAPP}-dedicated"
+ENV SERVERDIR "/server"
+ENV SERVERSCRIPTSDIR "${SERVERDIR}/scripts"
+# ENV STEAMAPPVALIDATE 0
 
-# Install required packages
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
-      dos2unix \
-    && apt-get install python3 -y \
-    && apt-get install python3.pip -y \
-    && pip install zomboid-rcon \
-    && pip install requests \
-    && pip install psutil \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+# Update packages, install packages, clean cache, prepare folders
+RUN apt-get update && \
+	apt-get install -y --no-install-recommends --no-install-suggests wget ca-certificates lib32z1 simpleproxy libicu-dev unzip jq  dos2unix && \
+	apt-get clean && \
+	find /var/lib/apt/lists/ -type f -delete && \
+	mkdir -p "${STEAMAPPDIR}" && \
+	mkdir -p "${SERVERSCRIPTSDIR}" && \
+	chmod -R 775 "${STEAMAPPDIR}" "${SERVERDIR}" && \
+	chown -R "${USER}:${USER}" "${STEAMAPPDIR}" "${SERVERDIR}"
 
-# Download the Project Zomboid dedicated server app using the steamcmd app
-# Set the entry point file permissions
-RUN set -x \
-  && mkdir -p "${STEAMAPPDIR}" \
-  && chown -R "${USER}:${USER}" "${STEAMAPPDIR}" \
-  && bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" \
-                                    +login anonymous \
-                                    +app_update "${STEAMAPPID}" validate \
-                                    +quit
+# Install python dependencies for modcheck
+RUN apt-get update && \
+	apt-get install -y python3 python3.pip && \
+	apt-get clean && \
+	find /var/lib/apt/lists/ -type f -delete && \
+	python3 -m pip install --no-cache-dir requests psutil zomboid-rcon
 
-# Copy the entry point file
-COPY --chown=${USER}:${USER} scripts/entry.sh /server/scripts/entry.sh
-RUN chmod 550 /server/scripts/entry.sh
+# Switch to user
+USER ${USER}
 
-# Copy searchfolder file
-COPY --chown=${USER}:${USER} scripts/search_folder.sh /server/scripts/search_folder.sh
-RUN chmod 550 /server/scripts/search_folder.sh
+RUN mkdir -p "${HOMEDIR}/Zomboid" && \
+	bash "${STEAMCMDDIR}/steamcmd.sh" +force_install_dir "${STEAMAPPDIR}" +login anonymous +app_update "${STEAMAPPID}" validate +quit
 
-# Copy modchecker file
-COPY --chown=${USER}:${USER} scripts/modchecker.py /server/scripts/modchecker.py
-RUN chmod 550 /server/scripts/modchecker.py
 
-# Create required folders to keep their permissions on mount
-RUN mkdir -p "${HOMEDIR}/Zomboid"
+
+# Build Server Runner
+FROM steamcmd-pz-server-base AS steamcmd-pz-server
+
+# Copy scripts
+COPY --chown=${USER}:${USER} scripts/entry.sh "${SERVERSCRIPTSDIR}/entry.sh"
+COPY --chown=${USER}:${USER} scripts/search_folder.sh "${SERVERSCRIPTSDIR}/search_folder.sh"
+COPY --chown=${USER}:${USER} scripts/search_folder.sh "${SERVERSCRIPTSDIR}/modchecker.sh"
+
+# Prepare scripts permissions
+RUN chmod 550 "${SERVERSCRIPTSDIR}/entry.sh" && \
+	chmod 550 "${SERVERSCRIPTSDIR}/search_folder.sh" && \
+	chmod 550 "${SERVERSCRIPTSDIR}/modchecker.py"
 
 WORKDIR ${HOMEDIR}
-# Expose ports
-EXPOSE 16261-16262/udp \
-       27015/tcp
 
-CMD ["sleep", "infinity"]
-ENTRYPOINT ["/server/scripts/entry.sh"]
+# Expose ports
+EXPOSE 16261-16262/udp 27015/tcp
+
+CMD ["bash", "/server/scripts/entry.sh"]
