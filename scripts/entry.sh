@@ -180,19 +180,20 @@ export LD_LIBRARY_PATH="${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}"
 ## Fix the permissions in the data and workshop folders
 chown -R "${USER}:${USER}" "${HOMEDIR}/pz-dedicated/steamapps/workshop" "${HOMEDIR}/Zomboid"
 
-## Start mod checker
-if [ ${MODCHECKERENABLED} = True ]; then 
-	echo '*** INFO: Modchecker enabled'
-	python3 "${SERVERSCRIPTSDIR}/modchecker.py" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini" "127.0.0.1" "${RCONPASSWORD}" "${ARGS}" &
-else
-	echo '*** INFO: Modchecker disabled'
-fi
+### Start mod checker
+#if [ "${MODCHECKERENABLED}" = "True" ]; then 
+#	echo '*** INFO: Modchecker enabled'
+#	python3 "${SERVERSCRIPTSDIR}/modchecker.py" "${HOMEDIR}/Zomboid/Server/${SERVERNAME}.ini" "127.0.0.1" "${RCONPASSWORD}" "${ARGS}" &
+#else
+#	echo '*** INFO: Modchecker disabled'
+#fi
+
+# Create control fifo pipe
+mkfifo "${SERVERDIR}/server.control"
 
 # Execute server
-export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && \
-  cd ${STEAMAPPDIR} && \
-  pwd && \
-  ./start-server.sh ${ARGS}
- 
+#export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd "${STEAMAPPDIR}" && pwd && ./start-server.sh ${ARGS} < "${SERVERDIR}/server.control"
+export LD_LIBRARY_PATH=\"${STEAMAPPDIR}/jre64/lib:${LD_LIBRARY_PATH}\" && cd "${STEAMAPPDIR}" && pwd && ./start-server.sh ${ARGS}
+
 # Keep running
-tail -f /dev/null
+#tail -f /dev/null
